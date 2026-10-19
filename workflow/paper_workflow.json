@@ -1,0 +1,148 @@
+{
+  "schema_version": 2,
+  "workflow_id": "paper-tower-3dgs-dynamic-visualization",
+  "title": "Paper-aligned tower reconstruction and dynamic visualization candidate",
+  "release_status": {
+    "end_to_end_reproduction": "partial_local_verification",
+    "github_url": null,
+    "note": "This workflow records the verified local handoff and explicitly identifies upstream stages that were not rerun."
+  },
+  "source_notebooks": [
+    {
+      "name": "1_3all_Zhixianta_weiyidaoru_feng.ipynb",
+      "role": "Select tower Gaussians from the trained model, align archived FE vibration samples, split static/moving Gaussians, and render dynamic frames."
+    },
+    {
+      "name": "1_3alll_Zhixianta_dixingtuozhan.ipynb",
+      "role": "Adaptive terrain/object separation, ordinary-Kriging terrain reconstruction, and constrained multi-layer terrain extension."
+    },
+    {
+      "name": "1_3_all_Zhixinta_wushijian_jianhua_copy.ipynb",
+      "role": "FE beam-line processing, displacement interpolation, and Gaussian deformation/anisotropic mapping utilities."
+    },
+    {
+      "name": "1_3all_zhixian_ansys copy.ipynb",
+      "role": "Import ANSYS node, element, and section tables and preprocess FE beam geometry; this is not the solver."
+    },
+    {
+      "name": "1_3alll_Zhixianta_tu.ipynb",
+      "role": "Paper figures, viewer diagnostics, and FE-beam-aligned ROI cache/training examples."
+    },
+    {
+      "name": "1_1_20260520.ipynb",
+      "role": "Reviewer/SfM diagnostics and ROI refinement/training examples."
+    }
+  ],
+  "stages": [
+    {
+      "id": "I",
+      "title": "Multi-view SfM, initial 3DGS training, and coordinate registration",
+      "status": "upstream_checkpoint_supplied_not_rerun",
+      "paper_scope": "COLMAP reconstruction and camera estimation, gsplat/EWA optimization, and Gaussian-to-FE registration.",
+      "candidate_behavior": "The local continuous demonstration starts from an existing 399999-step real-tower checkpoint. Photos, COLMAP reconstruction, and long 3DGS training were not rerun.",
+      "external_inputs": [
+        "Authorized multi-view tower photographs",
+        "COLMAP database and sparse reconstruction",
+        "Existing 399999-step checkpoint and Gaussian-to-FE transform"
+      ],
+      "source_components": [
+        "examples/datasets/colmap.py",
+        "examples/simple_trainer.py",
+        "revision_experiments/sfm_quality_group_diagnostics.py"
+      ]
+    },
+    {
+      "id": "IIa",
+      "title": "FE-beam-aligned structural ROI refinement and pruning",
+      "status": "existing_training_output_audited_not_rerun",
+      "paper_scope": "Region-aware densification and pruning guided by the exact FE-beam capsule ROI during training.",
+      "candidate_behavior": "The chain uses the supplied 449999-step ROI-trained checkpoint and its exact-capsule ROI cache. It does not rerun the long training job or infer per-Gaussian clone/split/prune lineage.",
+      "observed_counts": {
+        "initial_checkpoint": 1687725,
+        "roi_trained_checkpoint": 1687649,
+        "roi_gaussians_initial": 238354,
+        "roi_gaussians_trained": 772827
+      },
+      "source_components": [
+        "examples/build_fe_irregular_roi_cache.py",
+        "examples/train_irregular_region_filter.py",
+        "gsplat/strategy/irregular_region_strategy.py"
+      ]
+    },
+    {
+      "id": "IIb",
+      "title": "Terrain separation, Kriging, and multi-layer extension",
+      "status": "real_checkpoint_locally_rerun_with_documented_guard",
+      "paper_scope": "Notebook-aligned adaptive terrain/object classification, ordinary-Kriging terrain reconstruction, and constrained boundary extension.",
+      "candidate_behavior": "Rerun from the supplied ROI-trained checkpoint. An explicit exact-capsule structure guard was added because the original terrain thresholds misclassified structural points when transferred to this checkpoint; this guarded run is not the original notebook's unmodified numerical result.",
+      "input_gaussians": 1687649,
+      "expanded_gaussians": 1740385,
+      "outputs": [
+        "outputs/real_tower_roi_continuous_corrected_20261017_v4/step_ii/step_ii_manifest.json",
+        "outputs/real_tower_roi_continuous_corrected_20261017_v4/step_ii/ckpt_449999_rank0_expanded.pt",
+        "outputs/real_tower_roi_continuous_corrected_20261017_v4/step_ii/adaptive/ckpt_449999_rank0_terrain_adaptive.pt",
+        "outputs/real_tower_roi_continuous_corrected_20261017_v4/step_ii/ckpt_449999_rank0_terrain_adaptive_kriging.pt"
+      ],
+      "runner": "scripts/run_paper_step_ii.py",
+      "source_notebook": "1_3alll_Zhixianta_dixingtuozhan.ipynb"
+    },
+    {
+      "id": "III",
+      "title": "Wind-field loading and finite-element response",
+      "status": "solver_not_included_archived_registered_displacement_reused",
+      "paper_scope": "Wind/turbulence synthesis, dynamic loading, nonlinear ANSYS/FE response, and three-component displacement histories.",
+      "candidate_behavior": "No wind-field generator or ANSYS/FE solve was rerun. The demonstration reuses the archived 399-frame registered displacement field from the author's source data and maps its 107844 historical moving samples to the 772827 target ROI Gaussians by nearest source position; source rows may be reused.",
+      "observed_counts": {
+        "frames": 399,
+        "historical_moving_samples": 107844,
+        "target_moving_gaussians": 772827,
+        "expanded_gaussians": 1740385,
+        "static_gaussians": 967558
+      },
+      "mapping_audit": "outputs/real_tower_roi_continuous_corrected_20261017_v4/step_iii/runtime/mapping_audit.json",
+      "source_components": [
+        "workflow/paper_stages/ansys_model.py",
+        "workflow/paper_stages/chuli_dianxian.py",
+        "workflow/paper_stages/process_displacements.py",
+        "scripts/validate_step_iii_inputs.py"
+      ],
+      "limitations": [
+        "ANSYS model import and beam preprocessing are not an ANSYS solver.",
+        "Nearest-position transfer is not an exact Gaussian-ID match or the paper's full interpolation method.",
+        "The archived displacement field is not regenerated from wind or raw solver inputs."
+      ]
+    },
+    {
+      "id": "IV",
+      "title": "Deformation replay and dynamic gsplat rendering",
+      "status": "locally_verified_translation_only",
+      "paper_scope": "Right-polar rotation/stretch decomposition, Gaussian mean/orientation/scale/covariance updates, anisotropic FE-to-Gaussian propagation, and dynamic rendering.",
+      "candidate_behavior": "The verified continuous renderer updates moving Gaussian means as base_mean + scale_disp * registered_displacement and leaves static Gaussians unchanged. It renders four selected frames with gsplat; scale_disp=50 is a display amplification. Full polar/quaternion/log-scale/covariance updates are not executed by this continuous renderer.",
+      "outputs": [
+        "outputs/real_tower_roi_continuous_corrected_20261017_v4/step_iv/expanded_deformed_frame_00037.pt",
+        "outputs/real_tower_roi_continuous_corrected_20261017_v4/step_iv/dynamic_render/frames/",
+        "outputs/real_tower_roi_continuous_corrected_20261017_v4/independent_artifact_verification.json"
+      ],
+      "runner": "scripts/run_dynamic_gs.py",
+      "frames_rendered": [0, 37, 74, 111],
+      "source_notebooks": [
+        "1_3all_Zhixianta_weiyidaoru_feng.ipynb",
+        "1_3_all_Zhixinta_wushijian_jianhua_copy.ipynb"
+      ]
+    }
+  ],
+  "verification": {
+    "real_tower_chain_manifest": "outputs/real_tower_roi_continuous_corrected_20261017_v4/continuous_chain_manifest.json",
+    "independent_artifact_audit": "outputs/real_tower_roi_continuous_corrected_20261017_v4/independent_artifact_verification.json",
+    "audit_status": "passed",
+    "source_tests": "See README.md for environment-specific test results; not all optional-dependency test modules collect in every environment."
+  },
+  "publication": {
+    "public_url": null,
+    "requires": [
+      "Specify the destination GitHub owner/repository and visibility.",
+      "Review permissions for source code and all bundled third-party components.",
+      "Do not publish private photographs, FE data, checkpoints, notebooks, or ignored outputs without separate authorization."
+    ]
+  }
+}
