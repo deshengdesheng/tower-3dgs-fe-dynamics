@@ -1,0 +1,41 @@
+# Python and editor artifacts
+__pycache__/
+*.py[cod]
+.venv/
+venv/
+.idea/
+.vscode/
+.ipynb_checkpoints/
+tests/generated/
+build/
+dist/
+*.egg-info/
+*.so
+*.pyd
+*.o
+*.obj
+*.dll
+*.lib
+
+# Local inputs, trained models, and generated results
+data/
+inputs/
+checkpoints/
+models/
+results/
+outputs/
+revision_outputs/
+*.pt
+*.pth
+*.ckpt
+*.ply
+*.dat
+*.npy
+*.npz
+*.mp4
+*.avi
+
+# Credentials and machine-local configuration
+.env
+.env.*
+*.local

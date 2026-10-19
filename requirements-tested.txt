@@ -1,0 +1,32 @@
+# Observed versions in the authors' Python 3.10.15 / WSL environment.
+# This is a curated dependency snapshot, not a clean-environment lockfile.
+# Install PyTorch separately as described in ENVIRONMENT.md, before this file.
+# fused-ssim requires a CUDA toolkit and --no-build-isolation.
+numpy==1.26.4
+scipy==1.14.1
+scikit-learn==1.6.1
+Pillow==11.1.0
+opencv-python-headless==4.10.0.84
+scikit-image==0.24.0
+imageio==2.36.1
+imageio-ffmpeg==0.5.1
+tqdm==4.67.1
+matplotlib==3.10.0
+viser==0.2.7
+nerfview==0.1.3
+tyro==0.9.1
+PyYAML==6.0.2
+tensorly==0.9.0
+tensorboard==2.18.0
+torchmetrics==1.6.0
+typing_extensions==4.13.2
+jaxtyping==0.2.29
+ninja==1.11.1.2
+rich==13.9.4
+plyfile==1.1
+PyKrige==1.7.2
+plotly==6.2.0
+# SceneManager API comes from this fork; do not substitute PyPI pycolmap.
+pycolmap @ git+https://github.com/rmbrualla/pycolmap.git@cc7ea4b7301720ac29287dbe450952511b32125e
+# Optional pykeops==2.3 is only needed for the KeOps implementation.
+# Install fused-ssim separately after PyTorch; see ENVIRONMENT.md.
