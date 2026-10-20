@@ -24,4 +24,14 @@ CUDA compilation uses the vendored GLM headers in `gsplat/cuda/csrc/third_party/
 
 ## Runtime dependencies
 
-PyTorch, NumPy, scikit-learn, pycolmap, fused-ssim, viser, nerfview, and other installed dependencies retain their own licenses. Dependency installation does not transfer their ownership or licensing to the authors.
+The packages below are dependencies or external tools; they are not relicensed by this repository. Consult each upstream project for its current license and citation requirements.
+
+- [COLMAP](https://github.com/colmap/colmap) performs the upstream Structure-from-Motion reconstruction that supplies camera poses and sparse points. The repository's training path consumes those outputs; COLMAP is not bundled here. Follow COLMAP's own license and citation instructions when using that external tool.
+- [PyTorch](https://github.com/pytorch/pytorch) provides tensor operations and model-training infrastructure.
+- [pycolmap](https://github.com/rmbrualla/pycolmap/tree/cc7ea4b7301720ac29287dbe450952511b32125e) provides Python access to COLMAP reconstruction data; the pinned fork and commit used by the documented environment are recorded in `ENVIRONMENT.md`. Its MIT license is available in that source revision's [`LICENSE.txt`](https://github.com/rmbrualla/pycolmap/blob/cc7ea4b7301720ac29287dbe450952511b32125e/LICENSE.txt).
+- [viser 0.2.7](https://github.com/viser-project/viser) and [nerfview 0.1.3](https://github.com/nerfstudio-project/nerfview) provide the interactive camera/training inspection interface used by `examples/simple_trainer.py` and `scripts/check_viewer.py`. Both projects use Apache-2.0; see their upstream [viser license](https://github.com/viser-project/viser/blob/main/LICENSE) and [nerfview license](https://github.com/nerfstudio-project/nerfview/blob/main/LICENSE).
+- [Matplotlib 3.10.0](https://github.com/matplotlib/matplotlib) generates static diagnostic and analysis figures. See its upstream [license file](https://github.com/matplotlib/matplotlib/blob/v3.10.0/LICENSE/LICENSE); it is not covered by this repository's MIT license.
+- [Plotly.py 6.2.0](https://github.com/plotly/plotly.py) is used by optional interactive terrain/FE inspection scripts and is distributed under MIT; see its upstream [`LICENSE.txt`](https://github.com/plotly/plotly.py/blob/v6.2.0/LICENSE.txt).
+- NumPy, scikit-learn, fused-ssim, and other installed packages retain their respective upstream licenses; see `requirements-tested.txt` and `ENVIRONMENT.md` for the documented environment.
+
+These tools provide SfM, computation, viewer, and plotting infrastructure. The final 3D Gaussian image rasterization is performed by gsplat. Their use does not make these libraries part of the authors' method or transfer their ownership to the authors.

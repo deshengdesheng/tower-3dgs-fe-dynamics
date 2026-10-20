@@ -1,6 +1,6 @@
 # Release Checklist
 
-This is an internal checklist for the local candidate. It is not evidence that the code reproduces the paper's results.
+This checklist records release preparation and validation boundaries. It is not evidence that the code reproduces every paper result.
 
 - [x] Confirm the user has authority to release the included code and selected MIT.
 - [x] Add an MIT license for the authors' code.
@@ -20,5 +20,6 @@ This is an internal checklist for the local candidate. It is not evidence that t
 - [x] Package a Step III ANSYS/FE input-contract validator for node/element/section tables and registered displacement streams.
 - [x] Record that the listed notebooks do not contain the wind-field generator or nonlinear ANSYS/FE solver.
 - [ ] Verify that the README commands work on a clean checkout without access to author-only paths.
-- [ ] Create the public repository and verify its URL and access from a signed-out browser. No public URL exists yet.
-- [ ] Add the verified public URL to the manuscript abstract and response letter.
+- [x] Create the public repository: <https://github.com/deshengdesheng/tower-3dgs-fe-dynamics>.
+- [x] Add the repository URL to the manuscript abstract and R2 response letter.
+- [ ] Verify README commands on a clean checkout without access to author-only paths.

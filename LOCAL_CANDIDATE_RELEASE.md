@@ -1,9 +1,10 @@
-# Local release candidate
+# Reproducibility and release notes
 
-This is an unpublished source-code candidate for the tower workflow. It has no
-GitHub URL yet and must not be cited as the paper's source-code URL. The
-verified local run uses private, author-supplied data that is intentionally not
-included in Git.
+The public source repository for the tower workflow is
+<https://github.com/deshengdesheng/tower-3dgs-fe-dynamics>. This repository
+contains research code and selected upstream sources, not the private
+author-supplied images, checkpoints, FE inputs, or generated outputs used in
+the verified local run; those are intentionally not included in Git.
 
 ## Verified v4 handoff
 
@@ -54,8 +55,8 @@ self-contained data release.
 
 ## Publication state
 
-The author code uses MIT; bundled third-party code retains its own license.
-Review `PROVENANCE.md`, `THIRD_PARTY_NOTICES.md`, and the licenses before
-publication. No repository remote or public URL is configured yet. A target
-GitHub owner/repository and visibility are required before creating a release
-commit or pushing.
+The author's research code is licensed under MIT as stated in `LICENSE`;
+bundled third-party code retains its own license and source notices. The public
+repository URL above is the source-code link used for this paper. Review
+`PROVENANCE.md`, `THIRD_PARTY_NOTICES.md`, and the applicable license files
+when reusing or redistributing any component.

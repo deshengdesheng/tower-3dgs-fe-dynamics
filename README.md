@@ -1,6 +1,24 @@
-# 真实塔体重建与动态高斯可视化：本地候选版
+# 塔体 3DGS 重建与有限元驱动动态可视化
 
-本目录面向论文 PHOTO-D-26-00762R2，尚未公开。作者研究代码采用 MIT；随附 gsplat 等第三方组件保留各自许可证，见 `THIRD_PARTY_NOTICES.md`、`PROVENANCE.md` 和 `LICENSE-gsplat`。
+本仓库对应论文 PHOTO-D-26-00762R2，公开源码地址为 <https://github.com/deshengdesheng/tower-3dgs-fe-dynamics>。仓库包含作者研究代码及所需的部分上游源码，不包含原始照片、私有 checkpoint、有限元数据或本机运行输出。根目录 `LICENSE` 中的 MIT 许可仅适用于作者编写的研究代码；gsplat 等第三方代码仍按其原许可证分发，详见 `THIRD_PARTY_NOTICES.md`、`PROVENANCE.md` 和 `LICENSE-gsplat`。
+
+## Scope and attribution
+
+This repository applies the upstream COLMAP + gsplat pipeline to tower imagery. The authors' contribution is the tower-specific code for structural-ROI refinement, terrain processing/extension, finite-element displacement mapping, and connecting those stages for dynamic visualization. COLMAP provides SfM; gsplat provides the upstream 3DGS training/rasterization components. Neither is claimed as a method developed in this repository. Viser/nerfview provide the interactive viewer; Matplotlib and Plotly provide diagnostic plots. They do not implement the paper's reconstruction or deformation method. See `THIRD_PARTY_NOTICES.md` for upstream links and license boundaries.
+
+The public code documents the method and its implementation, but the verified real-tower demonstration starts from existing COLMAP/3DGS and ROI checkpoints. It does not rerun the original-image SfM, ROI training, wind-field generation, or ANSYS/FE solve in one execution. See `PIPELINE_DEMONSTRATION.md` for the exact validation scope.
+
+## 方法与代码归属
+
+本文方法把影像重建、结构重点区域细化、地形补全和有限元驱动动态显示串成一条流程。作者代码与依赖库的职责如下，第三方工具本身不作为本文原创贡献：
+
+1. **SfM 初始化（COLMAP）**：COLMAP 从多视图影像估计相机参数并生成稀疏重建；本仓库中的训练入口读取 COLMAP 输出，不替代 COLMAP 的特征提取、匹配和 SfM 求解。COLMAP 项目与引用信息见 <https://github.com/colmap/colmap>。
+2. **初始 3DGS（gsplat）**：初始塔体 Gaussian 使用上游 gsplat 训练入口读取 COLMAP 相机和稀疏点云进行拟合；本仓库不把上游训练器或 3DGS 基础算法称作作者原创。gsplat 提供训练/光栅化基础，论文中的区域策略、塔体地形处理以及 FE 驱动变形流程由本项目代码实现。上游代码及许可证见 <https://github.com/nerfstudio-project/gsplat> 和 `LICENSE-gsplat`。基础方法引用 Kerbl et al., “3D Gaussian Splatting for Real-Time Radiance Field Rendering,” ACM Transactions on Graphics, 42(4), 2023, <https://doi.org/10.1145/3592433.3592480>。
+3. **结构重点区域细化（作者代码）**：`examples/train_irregular_region_filter.py`、`examples/build_fe_irregular_roi_cache.py` 与 `gsplat/strategy/irregular_region_strategy.py` 实现/连接结构 ROI 约束下的训练策略，面向塔材细杆、节点等关键部位。这里调用 gsplat 的训练和光栅化基础设施；区域选择与策略扩展属于本项目代码。
+4. **地形补全与扩展（作者代码）**：`workflow/paper_stages/` 中的地形提取、Kriging、DEM 一致性和多层扩展脚本负责将已有场景进一步补全。当前真实塔体连续演示在已有地形模型上继续扩展，并非从无到有重建地形。
+5. **有限元位移映射与动态显示（作者代码 + gsplat）**：`workflow/paper_stages/`、`merged_gaussian_transform.py`、`apply_transform_with_anisotropic_kernel.py` 及 `scripts/` 实现 FE/高斯坐标处理、位移映射、模型变形和动态运行流程；最终 Gaussian 图像由 gsplat 光栅化器生成。训练过程的交互式相机界面使用 Viser 和 nerfview，诊断图使用 Matplotlib，部分地形/FE 检查脚本可选用 Plotly；这些库是第三方工具，不是本文提出的重建或变形算法。具体来源与许可证见 `THIRD_PARTY_NOTICES.md`。
+
+论文中作者实现的工作流代码见本仓库；公开仓库提供代码与运行说明，并不随附受限的真实数据。当前真实塔体连续演示从已有 COLMAP/3DGS 与 ROI checkpoint 开始；未在该次连续运行中重新处理原始照片、重做 SfM/ROI 训练、生成风场或运行 ANSYS/FE 求解。演示执行边界见下文和 `PIPELINE_DEMONSTRATION.md`，因此不应将其描述为一次从原始影像到有限元求解的全流程重跑。
 
 ## 当前主入口
 
@@ -42,7 +60,7 @@ GSPLAT_3DGS_ONLY=1 python -B scripts/run_real_roi_tower_chain.py \
 
 输出索引、变形前后 GS 和动态运行文件见 `REAL_TOWER_DEMO_INDEX.md`。本次执行范围及核查依据见 `PIPELINE_DEMONSTRATION.md`。
 
-直接查看本机结果：`outputs/real_tower_roi_continuous_corrected_20261017_v4/stage_visuals_topdown_20261019/index.html`。该中文图集含ROI训练对照、方向正确的各阶段诊断图、同范围俯视地形扩展前后图、真实零位移/变形GS对照和40帧子集动画。注意地形扩展前的449999输入本身已经含有地形；俯视对照中的红色仅表示本次追加的Gaussian中心。Windows动态重渲染入口为 `scripts/Start-ContinuousTowerDemo.ps1`，已实际运行成功。
+本机运行生成的图集位于 `outputs/real_tower_roi_continuous_corrected_20261017_v4/stage_visuals_topdown_20261019/index.html`；`outputs/` 被 Git 忽略，因此该图集和大型 checkpoint 不包含在公开仓库中。该中文图集含 ROI 训练对照、阶段诊断图、同范围俯视地形扩展前后图、真实零位移/变形 GS 对照和 40 帧子集动画。地形扩展前的 449999 输入本身已经含有地形；俯视对照中的红色仅表示本次追加的 Gaussian 中心。Windows 动态重渲染入口为 `scripts/Start-ContinuousTowerDemo.ps1`，已实际运行成功。
 
 ## 与论文流程的对应及剩余范围
 
@@ -54,7 +72,7 @@ GSPLAT_3DGS_ONLY=1 python -B scripts/run_real_roi_tower_chain.py \
 
 ## 初始化与代码来源
 
-初始 GS 使用 [gsplat](https://github.com/nerfstudio-project/gsplat) 从 [COLMAP](https://github.com/colmap/colmap) SfM 相机和稀疏点云训练。候选的 `examples/simple_trainer.py` 读取 COLMAP 结果；它不替代 COLMAP 的特征匹配和稀疏重建。ROI 入口为 `examples/train_irregular_region_filter.py`，策略在 `gsplat/strategy/irregular_region_strategy.py`；须提供同一数据集、初始 checkpoint 和已注册 ROI。
+初始 GS 使用 [gsplat](https://github.com/nerfstudio-project/gsplat) 从 [COLMAP](https://github.com/colmap/colmap) SfM 相机和稀疏点云训练。仓库中的 `examples/simple_trainer.py` 是 gsplat 上游训练入口；它读取 COLMAP 结果，不替代 COLMAP 的特征匹配和稀疏重建。ROI 入口为 `examples/train_irregular_region_filter.py`，策略在 `gsplat/strategy/irregular_region_strategy.py`；须提供同一数据集、初始 checkpoint 和已注册 ROI。上游来源、修改文件和许可证边界见 `PROVENANCE.md` 与 `THIRD_PARTY_NOTICES.md`。
 
 `workflow/paper_workflow.json` 保留早期四步范围说明，其旧输出引用不替代本次主入口。notebook 对应见 `NOTEBOOK_TRACEABILITY.md`；环境安装见 `ENVIRONMENT.md`、`requirements-tested.txt`。独立干净环境安装尚未完成验证。
 
@@ -62,4 +80,4 @@ GSPLAT_3DGS_ONLY=1 python -B scripts/run_real_roi_tower_chain.py \
 
 `outputs/real_tower_demo_final_20261017/` 是旧 272,300 点 `lingshi2` 分支，仅保留作历史对照，不是当前 ROI→补全→动态连续链。v2 未加结构保护；v3 的一对一匹配使665,207个 ROI 点仍为静态；本次以 v4 为主入口。
 
-代码尚无公开 URL，不能把本地路径或上游 gsplat 地址作为本论文源码链接填入摘要。当前与审稿意见的差距见 `REVIEWER_COMPLIANCE.md`。
+公开源码 URL 已加入论文摘要和 R2 回复信：<https://github.com/deshengdesheng/tower-3dgs-fe-dynamics>。它指向作者研究代码仓库，而不是上游 gsplat 项目。与审稿意见对应的代码范围及未覆盖部分见 `REVIEWER_COMPLIANCE.md`。
